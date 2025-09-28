@@ -1,8 +1,8 @@
 import telebot
 import os
 
-# Environment Variables
-TOKEN = os.environ.get("BOT_TOKEN")
+# Environment variables
+TOKEN = os.environ.get("BOT_TOKEN")  # Bot token to‘g‘ri ekanligiga ishonch hosil qiling
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
 
 bot = telebot.TeleBot(TOKEN)
@@ -34,8 +34,9 @@ def gift_menu_markup():
 
 def stars_menu_markup():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("⭐100", "⭐200", "⭐500")
-    markup.row("⭐1000", "⭐5000", "⭐10000")
+    markup.row("⭐100", "⭐150", "⭐250")
+    markup.row("⭐350", "⭐500", "⭐750")
+    markup.row("⭐1000", "⭐1500", "⭐2500", "⭐5000", "⭐10000")
     markup.row("Ortga")
     return markup
 
@@ -96,7 +97,7 @@ def menu(message):
         users[chat_id] = {"type": "gift_premium", "price": price}
 
     # Stars
-    elif text in ["⭐100", "⭐200", "⭐500", "⭐1000", "⭐5000", "⭐10000"]:
+    elif text.startswith("⭐"):
         price = text.split(" ")[1]
         bot.send_message(chat_id, tolov_info(price))
         bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
@@ -123,37 +124,15 @@ def check_handler(message):
         user_data = users[chat_id]
         user_type = user_data.get("type")
         bot.send_message(ADMIN_ID, f"Foydalanuvchi {chat_id} {user_type} to‘lov chekini yubordi: {user_data.get('price','')}")
-        if user_type == "account_premium":
-            bot.send_message(chat_id, "To‘lov tasdiqlandi. Endi Premium olmoqchi bo‘lgan Telegram akkauntingizni telefon raqamini +998 XX XXX XX XX formatda yuboring.")
-            users[chat_id]["step"] = "await_phone"
-        elif user_type in ["gift_premium", "stars"]:
-            bot.send_message(chat_id, "To‘lov tasdiqlandi. Endi username ni yuboring (masalan: @username)")
-            users[chat_id]["step"] = "await_username"
-        else:
-            bot.send_message(chat_id, "Chek adminga yuborildi, tasdiqlanishini kuting ✅")
+        bot.send_message(chat_id, "To‘lov tasdiqlandi. Keyingi qadamni kuting ✅")
+        users.pop(chat_id)
 
-# Telefon raqam va username qabul qilish
+# Otzivlar va boshqa follow-up
 @bot.message_handler(func=lambda m: True)
 def follow_up(message):
     chat_id = message.chat.id
     if chat_id not in users: return
-    step = users[chat_id].get("step")
-
-    if step == "await_phone":
-        users[chat_id]["phone"] = message.text
-        bot.send_message(chat_id, "Rahmat! Endi Telegram’dan borgan kodni shu ko‘rinishda yuboring: 12.345")
-        users[chat_id]["step"] = "await_code"
-    elif step == "await_code":
-        users[chat_id]["code"] = message.text
-        bot.send_message(ADMIN_ID, f"Foydalanuvchi {chat_id} kodi yubordi: {message.text}")
-        bot.send_message(chat_id, "Xaridingiz uchun rahmat! Premiumingiz faollashdi 🎉\nKeyingi xaridingizni kutib qolamiz.")
-        users.pop(chat_id)
-    elif step == "await_username":
-        users[chat_id]["username"] = message.text
-        bot.send_message(ADMIN_ID, f"Foydalanuvchi {chat_id} username yubordi: {message.text}")
-        bot.send_message(chat_id, "Sovg‘a/Stars faollashdi ✅")
-        users.pop(chat_id)
-    elif users[chat_id].get("type") == "otziv":
+    if users[chat_id].get("type") == "otziv":
         otzivlar.append(message.text)
         bot.send_message(chat_id, "Otzivingiz qabul qilindi, rahmat ✅")
         users.pop(chat_id)
