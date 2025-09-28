@@ -1,8 +1,9 @@
 import telebot
 import os
+from telebot.types import ReplyKeyboardMarkup
 
 # Environment variables
-TOKEN = os.environ.get("BOT_TOKEN")  # Bot token to‘g‘ri ekanligiga ishonch hosil qiling
+TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
 
 bot = telebot.TeleBot(TOKEN)
@@ -11,8 +12,7 @@ bot = telebot.TeleBot(TOKEN)
 users = {}
 otzivlar = []
 
-# Menyular
-from telebot.types import ReplyKeyboardMarkup
+# ---------- Menyular ----------
 
 def main_menu_markup():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -36,7 +36,8 @@ def stars_menu_markup():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("⭐100", "⭐150", "⭐250")
     markup.row("⭐350", "⭐500", "⭐750")
-    markup.row("⭐1000", "⭐1500", "⭐2500", "⭐5000", "⭐10000")
+    markup.row("⭐1000", "⭐1500", "⭐2500")
+    markup.row("⭐5000", "⭐10000")
     markup.row("Ortga")
     return markup
 
@@ -46,7 +47,35 @@ def otziv_menu_markup():
     markup.row("Ortga")
     return markup
 
-# To'lov ma'lumotlari
+# ---------- Narxlar ----------
+
+stars_prices = {
+    "⭐100": "26.000 so'm",
+    "⭐150": "38.000 so'm",
+    "⭐250": "61.000 so'm",
+    "⭐350": "85.000 so'm",
+    "⭐500": "119.000 so'm",
+    "⭐750": "177.000 so'm",
+    "⭐1000": "235.000 so'm",
+    "⭐1500": "351.000 so'm",
+    "⭐2500": "581.000 so'm",
+    "⭐5000": "1.161.000 so'm",
+    "⭐10000": "2.300.000 so'm"
+}
+
+premium_prices = {
+    "1 oy - 40.000 so'm": "40.000 so'm",
+    "12 oy - 278.000 so'm": "278.000 so'm"
+}
+
+gift_prices = {
+    "3 oy - 162.000 so'm": "162.000 so'm",
+    "6 oy - 215.000 so'm": "215.000 so'm",
+    "12 oy - 385.000 so'm": "385.000 so'm"
+}
+
+# ---------- To'lov info ----------
+
 def tolov_info(price):
     return f"""
 Karta raqami: 8600 XXXX XXXX XXXX
@@ -57,12 +86,14 @@ To‘lov summasi: {price}
 ❗️ Chekni olishni unutmang
 """
 
-# Start
+# ---------- Start ----------
+
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, "Asosiy menyuga xush kelibsiz!", reply_markup=main_menu_markup())
 
-# Asosiy menyu va variantlar
+# ---------- Menyularni boshqarish ----------
+
 @bot.message_handler(func=lambda m: True)
 def menu(message):
     chat_id = message.chat.id
@@ -82,24 +113,24 @@ def menu(message):
         else:
             bot.send_message(chat_id, "Hali otzivlar yo‘q", reply_markup=otziv_menu_markup())
 
-    # Premium variantlar
-    elif text in ["1 oy - 40.000 so'm", "12 oy - 278.000 so'm"]:
-        price = text.split("-")[1].strip()
+    # Premium
+    elif text in premium_prices:
+        price = premium_prices[text]
         bot.send_message(chat_id, tolov_info(price))
         bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
         users[chat_id] = {"type": "account_premium", "price": price}
 
     # Sovg'a Premium
-    elif text in ["3 oy - 162.000 so'm", "6 oy - 215.000 so'm", "12 oy - 385.000 so'm"]:
-        price = text.split("-")[1].strip()
+    elif text in gift_prices:
+        price = gift_prices[text]
         bot.send_message(chat_id, tolov_info(price))
         bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
         users[chat_id] = {"type": "gift_premium", "price": price}
 
     # Stars
-    elif text.startswith("⭐"):
-        price = text.split(" ")[1]
-        bot.send_message(chat_id, tolov_info(price))
+    elif text in stars_prices:
+        price = stars_prices[text]
+        bot.send_message(chat_id, f"{text} paketi tanlandi.\n\n" + tolov_info(price))
         bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
         users[chat_id] = {"type": "stars", "price": price}
 
@@ -111,7 +142,8 @@ def menu(message):
         bot.send_message(chat_id, "Iltimos, fikringizni yozing:")
         users[chat_id] = {"type": "otziv"}
 
-# Chek yuborish
+# ---------- Chek yuborish ----------
+
 @bot.message_handler(commands=['sendcheck'])
 def sendcheck(message):
     chat_id = message.chat.id
@@ -127,7 +159,8 @@ def check_handler(message):
         bot.send_message(chat_id, "To‘lov tasdiqlandi. Keyingi qadamni kuting ✅")
         users.pop(chat_id)
 
-# Otzivlar va boshqa follow-up
+# ---------- Otzivlar ----------
+
 @bot.message_handler(func=lambda m: True)
 def follow_up(message):
     chat_id = message.chat.id
@@ -137,7 +170,8 @@ def follow_up(message):
         bot.send_message(chat_id, "Otzivingiz qabul qilindi, rahmat ✅")
         users.pop(chat_id)
 
-# Polling bilan ishga tushirish
+# ---------- Polling bilan ishga tushirish ----------
+
 if __name__ == "__main__":
     print("Bot polling bilan ishga tushdi...")
     bot.infinity_polling(skip_pending=True)
