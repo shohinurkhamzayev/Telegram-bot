@@ -7,6 +7,8 @@ ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", 8170632684))
 
 bot = telebot.TeleBot(TOKEN)
 
+bot.remove_webhook()
+
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.InlineKeyboardMarkup()
