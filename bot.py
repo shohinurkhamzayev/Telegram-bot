@@ -2,13 +2,16 @@ import os
 import telebot
 from telebot import types
 
+# Environment Variables orqali token va admin ID olish
 TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", 8170632684))
+ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID"))
 
 bot = telebot.TeleBot(TOKEN)
 
+# ❌ Webhookni avtomatik o'chirish (polling uchun)
 bot.remove_webhook()
 
+# /start komandasi
 @bot.message_handler(commands=['start'])
 def start(message):
     markup = types.InlineKeyboardMarkup()
@@ -20,6 +23,7 @@ def start(message):
                      "Assalomu alaykum! Botga xush kelibsiz 👋\nQuyidagi bo‘limlardan birini tanlang:",
                      reply_markup=markup)
 
+# Callback handler
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     user = call.from_user
@@ -54,7 +58,6 @@ def callback_inline(call):
             "premium12": "📅 12 oylik Premium"
         }
         plan = plans[call.data]
-
         bot.send_message(call.message.chat.id,
                          f"✅ So‘rovingiz qabul qilindi!\nSiz {plan} tanladingiz.\nAdmin tez orada tasdiqlaydi.")
 
@@ -63,7 +66,11 @@ def callback_inline(call):
         markup.add(approve)
 
         bot.send_message(ADMIN_CHAT_ID,
-                         f"📥 Yangi Premium so‘rovi:\n\n{plan}\n👤 Foydalanuvchi: {user_name} (@{user.username})\n🆔 ID: {user_id}\n💬 Chat ID: {call.message.chat.id}",
+                         f"📥 Yangi Premium so‘rovi:\n\n"
+                         f"{plan}\n"
+                         f"👤 Foydalanuvchi: {user_name} (@{user.username})\n"
+                         f"🆔 ID: {user_id}\n"
+                         f"💬 Chat ID: {call.message.chat.id}",
                          reply_markup=markup)
 
     elif call.data.startswith("approve_"):
@@ -71,6 +78,7 @@ def callback_inline(call):
         bot.send_message(user_id, "🎉 Premiumingiz faollashtirildi! Rahmat!")
         bot.answer_callback_query(call.id, "✅ Foydalanuvchiga Premium tasdiqlandi.")
 
+# Ishga tushirish
 if __name__ == "__main__":
     print("Bot ishlamoqda...")
     bot.polling(non_stop=True)
