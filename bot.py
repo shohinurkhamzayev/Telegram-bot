@@ -32,9 +32,9 @@ def callback_inline(call):
 
     if call.data == "premium":
         markup = types.InlineKeyboardMarkup()
-        one = types.InlineKeyboardButton("1️⃣ 1 oy – 30 000 so'm", callback_data="premium1")
-        three = types.InlineKeyboardButton("3️⃣ 3 oy – 85 000 so'm", callback_data="premium3")
-        twelve = types.InlineKeyboardButton("📅 12 oy – 300 000 so'm", callback_data="premium12")
+        one = types.InlineKeyboardButton("1️⃣ 1 oy – 40 000 so'm", callback_data="premium1")
+        three = types.InlineKeyboardButton("3️⃣ 3 oy – 162 000 so'm", callback_data="premium3")
+        twelve = types.InlineKeyboardButton("📅 12 oy – 275 000 so'm/385 000 so'm", callback_data="premium12")
         markup.add(one, three, twelve)
         bot.edit_message_text(chat_id=call.message.chat.id,
                               message_id=call.message.message_id,
