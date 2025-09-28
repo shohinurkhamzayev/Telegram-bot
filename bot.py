@@ -1,5 +1,4 @@
 import telebot
-from flask import Flask, request
 import os
 
 # Environment Variables
@@ -7,37 +6,44 @@ TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
 
 bot = telebot.TeleBot(TOKEN)
-server = Flask(__name__)
 
 # Oddiy DB
 users = {}
 otzivlar = []
 
 # Menyular
-main_menu = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-main_menu.row("Premium xizmatlar", "Stars xizmatlar")
-main_menu.row("Admin bilan aloqa", "Otzivlar")
+from telebot.types import ReplyKeyboardMarkup
 
-premium_menu = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-premium_menu.row("1 oy - 40.000 so'm", "12 oy - 278.000 so'm")
-premium_menu.row("Ortga")
+def main_menu_markup():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("Premium xizmatlar", "Stars xizmatlar")
+    markup.row("Admin bilan aloqa", "Otzivlar")
+    return markup
 
-gift_menu = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-gift_menu.row("3 oy - 162.000 so'm", "6 oy - 215.000 so'm", "12 oy - 385.000 so'm")
-gift_menu.row("Ortga")
+def premium_menu_markup():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("1 oy - 40.000 so'm", "12 oy - 278.000 so'm")
+    markup.row("Ortga")
+    return markup
 
-stars_menu = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-stars_menu.row("⭐100", "⭐200", "⭐500")
-stars_menu.row("⭐1000", "⭐5000", "⭐10000")
-stars_menu.row("Ortga")
+def gift_menu_markup():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("3 oy - 162.000 so'm", "6 oy - 215.000 so'm", "12 oy - 385.000 so'm")
+    markup.row("Ortga")
+    return markup
 
-contact_admin = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-contact_admin.row("Admin bilan aloqa")
-contact_admin.row("Ortga")
+def stars_menu_markup():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("⭐100", "⭐200", "⭐500")
+    markup.row("⭐1000", "⭐5000", "⭐10000")
+    markup.row("Ortga")
+    return markup
 
-otziv_menu = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-otziv_menu.row("Otziv qoldirish")
-otziv_menu.row("Ortga")
+def otziv_menu_markup():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("Otziv qoldirish")
+    markup.row("Ortga")
+    return markup
 
 # To'lov ma'lumotlari
 def tolov_info(price):
@@ -53,7 +59,7 @@ To‘lov summasi: {price}
 # Start
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, "Asosiy menyuga xush kelibsiz!", reply_markup=main_menu)
+    bot.send_message(message.chat.id, "Asosiy menyuga xush kelibsiz!", reply_markup=main_menu_markup())
 
 # Asosiy menyu va variantlar
 @bot.message_handler(func=lambda m: True)
@@ -63,17 +69,17 @@ def menu(message):
 
     # Asosiy menyu
     if text == "Premium xizmatlar":
-        bot.send_message(chat_id, "Premium variantni tanlang:", reply_markup=premium_menu)
+        bot.send_message(chat_id, "Premium variantni tanlang:", reply_markup=premium_menu_markup())
     elif text == "Stars xizmatlar":
-        bot.send_message(chat_id, "Stars paketini tanlang:", reply_markup=stars_menu)
+        bot.send_message(chat_id, "Stars paketini tanlang:", reply_markup=stars_menu_markup())
     elif text == "Admin bilan aloqa":
         bot.send_message(chat_id, "Iltimos faqat zarur bo‘lsa bezovta qiling\nhttps://t.me/shoh1nur_khamzayev")
     elif text == "Otzivlar":
         if otzivlar:
             msgs = "\n\n".join([f"Anonim: {o}" for o in otzivlar])
-            bot.send_message(chat_id, msgs, reply_markup=otziv_menu)
+            bot.send_message(chat_id, msgs, reply_markup=otziv_menu_markup())
         else:
-            bot.send_message(chat_id, "Hali otzivlar yo‘q", reply_markup=otziv_menu)
+            bot.send_message(chat_id, "Hali otzivlar yo‘q", reply_markup=otziv_menu_markup())
 
     # Premium variantlar
     elif text in ["1 oy - 40.000 so'm", "12 oy - 278.000 so'm"]:
@@ -98,7 +104,7 @@ def menu(message):
 
     # Ortga
     elif text == "Ortga":
-        bot.send_message(chat_id, "Asosiy menyu:", reply_markup=main_menu)
+        bot.send_message(chat_id, "Asosiy menyu:", reply_markup=main_menu_markup())
     # Otziv qoldirish
     elif text == "Otziv qoldirish":
         bot.send_message(chat_id, "Iltimos, fikringizni yozing:")
@@ -152,19 +158,7 @@ def follow_up(message):
         bot.send_message(chat_id, "Otzivingiz qabul qilindi, rahmat ✅")
         users.pop(chat_id)
 
-# Flask webhook
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "ok", 200
-
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url="https://YOUR_RENDER_APP_URL/" + TOKEN)
-    return "Webhook set", 200
-
+# Polling bilan ishga tushirish
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    print("Bot polling bilan ishga tushdi...")
+    bot.infinity_polling(skip_pending=True)
