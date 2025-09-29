@@ -4,7 +4,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Environment variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = os.environ.get("ADMIN_ID", "123456789")  # Default admin ID
+ADMIN_ID = os.environ.get("ADMIN_ID")  # Default admin ID
 
 bot = telebot.TeleBot(TOKEN)
 
