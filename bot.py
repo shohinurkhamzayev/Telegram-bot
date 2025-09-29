@@ -1,177 +1,142 @@
-import telebot
 import os
-from telebot.types import ReplyKeyboardMarkup
+import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, CallbackQueryHandler,
+    ContextTypes
+)
 
-# Environment variables
+# Render env variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "yourusername")
 
-bot = telebot.TeleBot(TOKEN)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
 
-# Oddiy DB
-users = {}
-otzivlar = []
-
-# ---------- Menyular ----------
-
-def main_menu_markup():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("Premium xizmatlar", "Stars xizmatlar")
-    markup.row("Admin bilan aloqa", "Otzivlar")
-    return markup
-
-def premium_menu_markup():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("1 oy - 40.000 so'm", "12 oy - 278.000 so'm")
-    markup.row("Ortga")
-    return markup
-
-def gift_menu_markup():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("3 oy - 162.000 so'm", "6 oy - 215.000 so'm", "12 oy - 385.000 so'm")
-    markup.row("Ortga")
-    return markup
-
-def stars_menu_markup():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("⭐100", "⭐150", "⭐250")
-    markup.row("⭐350", "⭐500", "⭐750")
-    markup.row("⭐1000", "⭐1500", "⭐2500")
-    markup.row("⭐5000", "⭐10000")
-    markup.row("Ortga")
-    return markup
-
-def otziv_menu_markup():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("Otziv qoldirish")
-    markup.row("Ortga")
-    return markup
-
-# ---------- Narxlar ----------
-
-stars_prices = {
-    "⭐100": "26.000 so'm",
-    "⭐150": "38.000 so'm",
-    "⭐250": "61.000 so'm",
-    "⭐350": "85.000 so'm",
-    "⭐500": "119.000 so'm",
-    "⭐750": "177.000 so'm",
-    "⭐1000": "235.000 so'm",
-    "⭐1500": "351.000 so'm",
-    "⭐2500": "581.000 so'm",
-    "⭐5000": "1.161.000 so'm",
-    "⭐10000": "2.300.000 so'm"
+# Paketlar narxlari
+PLANS = {
+    "plan_1": {"name": "1 oylik Premium", "price": "40 000 so'm"},
+    "plan_12": {"name": "12 oylik Premium", "price": "275 000 so'm"},
+    "gift_3": {"name": "Sovg‘a 3 oylik", "price": "160 000 so'm"},
+    "gift_6": {"name": "Sovg‘a 6 oylik", "price": "215 000 so'm"},
+    "gift_12": {"name": "Sovg‘a 12 oylik", "price": "385 000 so'm"},
+    "stars_100": {"name": "100 ⭐", "price": "26 000 so'm"},
+    "stars_150": {"name": "150 ⭐", "price": "37 500 so'm"},
+    "stars_250": {"name": "250 ⭐", "price": "60 500 so'm"},
+    "stars_350": {"name": "350 ⭐", "price": "84 500 so'm"},
+    "stars_500": {"name": "500 ⭐", "price": "118 500 so'm"},
+    "stars_750": {"name": "750 ⭐", "price": "176 500 so'm"},
+    "stars_1000": {"name": "1000 ⭐", "price": "234 500 so'm"},
+    "stars_1500": {"name": "1500 ⭐", "price": "350 500 so'm"},
+    "stars_2500": {"name": "2500 ⭐", "price": "580 500 so'm"},
+    "stars_10000": {"name": "10000 ⭐", "price": "2 300 000 so'm"},
+    "stars_25000": {"name": "25000 ⭐", "price": "5 800 000 so'm"},
 }
 
-premium_prices = {
-    "1 oy - 40.000 so'm": "40.000 so'm",
-    "12 oy - 278.000 so'm": "278.000 so'm"
-}
+# Asosiy menyu
+def main_menu():
+    keyboard = [
+        [InlineKeyboardButton("👤 Akkountga kirib", callback_data="account")],
+        [InlineKeyboardButton("🎁 Sovg‘a sifatida", callback_data="gift")],
+        [InlineKeyboardButton("⭐ Stars xizmatlar", callback_data="stars")],
+        [InlineKeyboardButton("❓ Premium bot ishlamasa", callback_data="help")],
+        [InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"https://t.me/{ADMIN_USERNAME}")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
-gift_prices = {
-    "3 oy - 162.000 so'm": "162.000 so'm",
-    "6 oy - 215.000 so'm": "215.000 so'm",
-    "12 oy - 385.000 so'm": "385.000 so'm"
-}
 
-# ---------- To'lov info ----------
+# /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Assalomu alaykum!\nPremium xizmatlarni tanlang 👇",
+        reply_markup=main_menu()
+    )
 
-def tolov_info(price):
-    return f"""
-Karta raqami: 8600 XXXX XXXX XXXX
-Karta egasi: Shohinur Khamzayev
-Ulangan raqam: +998901234567
-To‘lov summasi: {price}
 
-❗️ Chekni olishni unutmang
-"""
+# Callback handler
+async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    data = query.data
+    await query.answer()
 
-# ---------- Start ----------
+    if data == "account":
+        keyboard = [
+            [InlineKeyboardButton("1 oylik Premium", callback_data="plan_1")],
+            [InlineKeyboardButton("12 oylik Premium", callback_data="plan_12")],
+            [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
+        ]
+        await query.edit_message_text("Akkount muddati tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id, "Asosiy menyuga xush kelibsiz!", reply_markup=main_menu_markup())
+    elif data == "gift":
+        keyboard = [
+            [InlineKeyboardButton("3 oylik", callback_data="gift_3")],
+            [InlineKeyboardButton("6 oylik", callback_data="gift_6")],
+            [InlineKeyboardButton("12 oylik", callback_data="gift_12")],
+            [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
+        ]
+        await query.edit_message_text("Sovg‘a muddati tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-# ---------- Menyularni boshqarish ----------
+    elif data == "stars":
+        keyboard = [
+            [InlineKeyboardButton("100 ⭐", callback_data="stars_100"),
+             InlineKeyboardButton("150 ⭐", callback_data="stars_150")],
+            [InlineKeyboardButton("250 ⭐", callback_data="stars_250"),
+             InlineKeyboardButton("350 ⭐", callback_data="stars_350")],
+            [InlineKeyboardButton("500 ⭐", callback_data="stars_500"),
+             InlineKeyboardButton("750 ⭐", callback_data="stars_750")],
+            [InlineKeyboardButton("1000 ⭐", callback_data="stars_1000"),
+             InlineKeyboardButton("1500 ⭐", callback_data="stars_1500")],
+            [InlineKeyboardButton("2500 ⭐", callback_data="stars_2500"),
+             InlineKeyboardButton("10000 ⭐", callback_data="stars_10000")],
 
-@bot.message_handler(func=lambda m: True)
-def menu(message):
-    chat_id = message.chat.id
-    text = message.text
+[InlineKeyboardButton("25000 ⭐", callback_data="stars_25000")],
+            [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
+        ]
+        await query.edit_message_text("Stars paketini tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-    # Asosiy menyu
-    if text == "Premium xizmatlar":
-        bot.send_message(chat_id, "Premium variantni tanlang:", reply_markup=premium_menu_markup())
-    elif text == "Stars xizmatlar":
-        bot.send_message(chat_id, "Stars paketini tanlang:", reply_markup=stars_menu_markup())
-    elif text == "Admin bilan aloqa":
-        bot.send_message(chat_id, "Iltimos faqat zarur bo‘lsa bezovta qiling\nhttps://t.me/shoh1nur_khamzayev")
-    elif text == "Otzivlar":
-        if otzivlar:
-            msgs = "\n\n".join([f"Anonim: {o}" for o in otzivlar])
-            bot.send_message(chat_id, msgs, reply_markup=otziv_menu_markup())
-        else:
-            bot.send_message(chat_id, "Hali otzivlar yo‘q", reply_markup=otziv_menu_markup())
+    elif data in PLANS:
+        plan = PLANS[data]
+        await query.edit_message_text(
+            f"✅ Siz tanladingiz: *{plan['name']}*\n"
+            f"💵 Narxi: *{plan['price']}*\n\n"
+            "ℹ️ To‘lov uchun karta: `8600 XXXX XXXX XXXX`\n"
+            "Chekni yuboring va 1-2 daqiqa kuting, admin tasdiqlaydi.",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("📤 Chekni yubordim", callback_data="check_sent")],
+                 [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")]]
+            ),
+        )
 
-    # Premium
-    elif text in premium_prices:
-        price = premium_prices[text]
-        bot.send_message(chat_id, tolov_info(price))
-        bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
-        users[chat_id] = {"type": "account_premium", "price": price}
+    elif data == "check_sent":
+        await query.edit_message_text(
+            "⏳ Chek yuborildi. 1-2 daqiqa kuting, admin tekshiradi.",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬅️ Asosiy menyu", callback_data="back_main")]]
+            ),
+        )
 
-    # Sovg'a Premium
-    elif text in gift_prices:
-        price = gift_prices[text]
-        bot.send_message(chat_id, tolov_info(price))
-        bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
-        users[chat_id] = {"type": "gift_premium", "price": price}
+    elif data == "help":
+        await query.edit_message_text(
+            "Agar bot ishlamay qolsa 👨‍💻 Admin bilan bog‘laning.",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"https://t.me/shoh1nur_khamzayev")],
+                 [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")]]
+            ),
+        )
 
-    # Stars
-    elif text in stars_prices:
-        price = stars_prices[text]
-        bot.send_message(chat_id, f"{text} paketi tanlandi.\n\n" + tolov_info(price))
-        bot.send_message(chat_id, "To‘lovni tasdiqlash tugmasini bosing /sendcheck")
-        users[chat_id] = {"type": "stars", "price": price}
+    elif data == "back_main":
+        await query.edit_message_text("Asosiy menyu:", reply_markup=main_menu())
 
-    # Ortga
-    elif text == "Ortga":
-        bot.send_message(chat_id, "Asosiy menyu:", reply_markup=main_menu_markup())
-    # Otziv qoldirish
-    elif text == "Otziv qoldirish":
-        bot.send_message(chat_id, "Iltimos, fikringizni yozing:")
-        users[chat_id] = {"type": "otziv"}
 
-# ---------- Chek yuborish ----------
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(callbacks))
+    app.run_polling()
 
-@bot.message_handler(commands=['sendcheck'])
-def sendcheck(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, "Iltimos, to‘lov chekini rasm yoki PDF shaklida yuboring.")
-
-@bot.message_handler(content_types=['photo', 'document'])
-def check_handler(message):
-    chat_id = message.chat.id
-    if chat_id in users:
-        user_data = users[chat_id]
-        user_type = user_data.get("type")
-        bot.send_message(ADMIN_ID, f"Foydalanuvchi {chat_id} {user_type} to‘lov chekini yubordi: {user_data.get('price','')}")
-        bot.send_message(chat_id, "To‘lov tasdiqlandi. Keyingi qadamni kuting ✅")
-        users.pop(chat_id)
-
-# ---------- Otzivlar ----------
-
-@bot.message_handler(func=lambda m: True)
-def follow_up(message):
-    chat_id = message.chat.id
-    if chat_id not in users: return
-    if users[chat_id].get("type") == "otziv":
-        otzivlar.append(message.text)
-        bot.send_message(chat_id, "Otzivingiz qabul qilindi, rahmat ✅")
-        users.pop(chat_id)
-
-# ---------- Polling bilan ishga tushirish ----------
 
 if __name__ == "__main__":
-    print("Bot polling bilan ishga tushdi...")
-    bot.infinity_polling(skip_pending=True)
+    main()
