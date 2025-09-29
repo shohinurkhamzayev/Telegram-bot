@@ -8,7 +8,7 @@ from telegram.ext import (
 
 # Render env variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_USERNAME = os.environ.get("ADMIN_ID", "yourusername")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "yourusername")
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -122,7 +122,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "Agar bot ishlamay qolsa 👨‍💻 Admin bilan bog‘laning.",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"https://t.me/shoh1nur_khamzayev")],
+                [[InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"https://t.me/{ADMIN_USERNAME}")],
                  [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")]]
             ),
         )
@@ -132,6 +132,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
+    # Render uchun polling ishlatiladi (background worker sifatida)
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(callbacks))
