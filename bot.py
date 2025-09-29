@@ -42,7 +42,7 @@ def main_menu():
         [InlineKeyboardButton("🎁 Sovg‘a sifatida", callback_data="gift")],
         [InlineKeyboardButton("⭐ Stars xizmatlar", callback_data="stars")],
         [InlineKeyboardButton("❓ Premium bot ishlamasa", callback_data="help")],
-        [InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"https://t.me/{ADMIN_USERNAME}")],
+        [InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={8170632684}")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
