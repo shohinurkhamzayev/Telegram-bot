@@ -78,7 +78,7 @@ def callbacks(call):
         keyboard.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main"))
         bot.edit_message_text(
             f"✅ Siz tanladingiz: {plan['name']}\n💵 Narxi: {plan['price']}\n\n"
-            "ℹ️ To‘lov uchun karta: `9860 1606 5188 8820`\nChekni yuboring va 1-2 daqiqa kuting, admin tasdiqlaydi.",
+            "ℹ️ To‘lov uchun karta: `9860160651888820`\nChekni yuboring va 1-2 daqiqa kuting, admin tasdiqlaydi.",
             call.message.chat.id,
             call.message.message_id,
             reply_markup=keyboard,
