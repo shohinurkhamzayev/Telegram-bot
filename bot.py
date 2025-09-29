@@ -1,19 +1,14 @@
 import os
-import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Environment variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = int(os.environ.get("ADMIN_ID"))  # Default admin ID
+ADMIN_ID = os.environ.get("ADMIN_ID", "123456789")  # Default admin ID
 
-# Logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+bot = telebot.TeleBot(TOKEN)
 
-# Paketlar narxlari
+# Paketlar va narxlari
 PLANS = {
     "plan_1": {"name": "1 oylik Premium", "price": "40 000 so'm"},
     "plan_12": {"name": "12 oylik Premium", "price": "275 000 so'm"},
@@ -25,112 +20,94 @@ PLANS = {
     "stars_250": {"name": "250 ⭐", "price": "60 500 so'm"},
     "stars_350": {"name": "350 ⭐", "price": "84 500 so'm"},
     "stars_500": {"name": "500 ⭐", "price": "118 500 so'm"},
-    "stars_750": {"name": "750 ⭐", "price": "176 500 so'm"},
-    "stars_1000": {"name": "1000 ⭐", "price": "234 500 so'm"},
-    "stars_1500": {"name": "1500 ⭐", "price": "350 500 so'm"},
-    "stars_2500": {"name": "2500 ⭐", "price": "580 500 so'm"},
-    "stars_10000": {"name": "10000 ⭐", "price": "2 300 000 so'm"},
-    "stars_25000": {"name": "25000 ⭐", "price": "5 800 000 so'm"},
 }
 
 # Asosiy menyu
 def main_menu():
-    keyboard = [
-        [InlineKeyboardButton("👤 Akkountga kirib", callback_data="account")],
-        [InlineKeyboardButton("🎁 Sovg‘a sifatida", callback_data="gift")],
-        [InlineKeyboardButton("⭐ Stars xizmatlar", callback_data="stars")],
-        [InlineKeyboardButton("❓ Premium bot ishlamasa", callback_data="help")],
-        [InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={ADMIN_ID}")],
-    ]
-    return InlineKeyboardMarkup(keyboard)
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton("👤 Akkountga kirib", callback_data="account"))
+    keyboard.add(InlineKeyboardButton("🎁 Sovg‘a sifatida", callback_data="gift"))
+    keyboard.add(InlineKeyboardButton("⭐ Stars xizmatlar", callback_data="stars"))
+    keyboard.add(InlineKeyboardButton("❓ Premium bot ishlamasa", callback_data="help"))
+    keyboard.add(InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={ADMIN_ID}"))
+    return keyboard
 
 # /start handler
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(
+        message.chat.id,
         "Assalomu alaykum!\nPremium xizmatlarni tanlang 👇",
         reply_markup=main_menu()
     )
 
-# CallbackQuery handler
-async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    data = query.data
-    await query.answer()
+# Callback handler
+@bot.callback_query_handler(func=lambda call: True)
+def callbacks(call):
+    data = call.data
 
     if data == "account":
-        keyboard = [
-            [InlineKeyboardButton("1 oylik Premium", callback_data="plan_1")],
-            [InlineKeyboardButton("12 oylik Premium", callback_data="plan_12")],
-            [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
-        ]
-        await query.edit_message_text("Akkount muddati tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("1 oylik Premium", callback_data="plan_1"))
+        keyboard.add(InlineKeyboardButton("12 oylik Premium", callback_data="plan_12"))
+        keyboard.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main"))
+        bot.edit_message_text("Akkount muddati tanlang:", call.message.chat.id, call.message.message_id, reply_markup=keyboard)
 
     elif data == "gift":
-        keyboard = [
-            [InlineKeyboardButton("3 oylik", callback_data="gift_3")],
-            [InlineKeyboardButton("6 oylik", callback_data="gift_6")],
-            [InlineKeyboardButton("12 oylik", callback_data="gift_12")],
-            [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
-        ]
-        await query.edit_message_text("Sovg‘a muddati tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("3 oylik", callback_data="gift_3"))
+        keyboard.add(InlineKeyboardButton("6 oylik", callback_data="gift_6"))
+        keyboard.add(InlineKeyboardButton("12 oylik", callback_data="gift_12"))
+        keyboard.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main"))
+        bot.edit_message_text("Sovg‘a muddati tanlang:", call.message.chat.id, call.message.message_id, reply_markup=keyboard)
 
     elif data == "stars":
-        keyboard = [
-            [InlineKeyboardButton("100 ⭐", callback_data="stars_100"),
-             InlineKeyboardButton("150 ⭐", callback_data="stars_150")],
-            [InlineKeyboardButton("250 ⭐", callback_data="stars_250"),
-             InlineKeyboardButton("350 ⭐", callback_data="stars_350")],
-            [InlineKeyboardButton("500 ⭐", callback_data="stars_500"),
-             InlineKeyboardButton("750 ⭐", callback_data="stars_750")],
-            [InlineKeyboardButton("1000 ⭐", callback_data="stars_1000"),
-             InlineKeyboardButton("1500 ⭐", callback_data="stars_1500")],
-            [InlineKeyboardButton("2500 ⭐", callback_data="stars_2500"),
-             InlineKeyboardButton("10000 ⭐", callback_data="stars_10000")],
-            [InlineKeyboardButton("25000 ⭐", callback_data="stars_25000")],
-            [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
-        ]
-        await query.edit_message_text("Stars paketini tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("100 ⭐", callback_data="stars_100"))
+        keyboard.add(InlineKeyboardButton("150 ⭐", callback_data="stars_150"))
+        keyboard.add(InlineKeyboardButton("250 ⭐", callback_data="stars_250"))
+        keyboard.add(InlineKeyboardButton("350 ⭐", callback_data="stars_350"))
+        keyboard.add(InlineKeyboardButton("500 ⭐", callback_data="stars_500"))
+        keyboard.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main"))
+        bot.edit_message_text("Stars paketini tanlang:", call.message.chat.id, call.message.message_id, reply_markup=keyboard)
 
     elif data in PLANS:
         plan = PLANS[data]
-        await query.edit_message_text(
-            f"✅ Siz tanladingiz: *{plan['name']}*\n"
-            f"💵 Narxi: *{plan['price']}*\n\n"
-            "ℹ️ To‘lov uchun karta: `8600 XXXX XXXX XXXX`\n"
-            "Chekni yuboring va 1-2 daqiqa kuting, admin tasdiqlaydi.",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("📤 Chekni yubordim", callback_data="check_sent")],
-                 [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")]]
-            ),
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("📤 Chekni yubordim", callback_data="check_sent"))
+        keyboard.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main"))
+        bot.edit_message_text(
+            f"✅ Siz tanladingiz: {plan['name']}\n💵 Narxi: {plan['price']}\n\n"
+            "ℹ️ To‘lov uchun karta: `8600 XXXX XXXX XXXX`\nChekni yuboring va 1-2 daqiqa kuting, admin tasdiqlaydi.",
+            call.message.chat.id,
+            call.message.message_id,
+            reply_markup=keyboard,
+            parse_mode="Markdown"
         )
 
     elif data == "check_sent":
-        await query.edit_message_text(
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("⬅️ Asosiy menyu", callback_data="back_main"))
+        bot.edit_message_text(
             "⏳ Chek yuborildi. 1-2 daqiqa kuting, admin tekshiradi.",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅️ Asosiy menyu", callback_data="back_main")]]
-            ),
+            call.message.chat.id,
+            call.message.message_id,
+            reply_markup=keyboard
         )
 
     elif data == "help":
-        await query.edit_message_text(
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={ADMIN_ID}"))
+        keyboard.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main"))
+        bot.edit_message_text(
             "Agar bot ishlamay qolsa 👨‍💻 Admin bilan bog‘laning.",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={ADMIN_ID}")],
-                 [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")]]
-            ),
+            call.message.chat.id,
+            call.message.message_id,
+            reply_markup=keyboard
         )
 
     elif data == "back_main":
-        await query.edit_message_text("Asosiy menyu:", reply_markup=main_menu())
+        bot.edit_message_text("Asosiy menyu:", call.message.chat.id, call.message.message_id, reply_markup=main_menu())
 
-# Main function
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(callbacks))
-    app.run_polling()  # Background worker sifatida
-
-if __name__ == "__main__":
-    main()
+# Botni ishga tushurish
+bot.infinity_polling()
