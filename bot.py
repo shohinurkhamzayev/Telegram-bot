@@ -8,7 +8,7 @@ from telegram.ext import (
 
 # Render env variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "yourusername")
+ADMIN_ID = os.environ.get("ADMIN_ID", "8170632684")
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
