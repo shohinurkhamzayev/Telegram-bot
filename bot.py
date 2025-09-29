@@ -1,14 +1,11 @@
 import os
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, CallbackQueryHandler,
-    ContextTypes
-)
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Render environment variables
+# Environment variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = int(os.environ.get("ADMIN_ID", "8170632684"))  # Telegram admin ID
+ADMIN_ID = int(os.environ.get("ADMIN_ID"))  # Admin Telegram ID
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -42,20 +39,18 @@ def main_menu():
         [InlineKeyboardButton("🎁 Sovg‘a sifatida", callback_data="gift")],
         [InlineKeyboardButton("⭐ Stars xizmatlar", callback_data="stars")],
         [InlineKeyboardButton("❓ Premium bot ishlamasa", callback_data="help")],
-        [InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={8170632684}")],
+        [InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={ADMIN_ID}")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
-# /start
+# /start handler
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Assalomu alaykum!\nPremium xizmatlarni tanlang 👇",
         reply_markup=main_menu()
     )
 
-
-# Callback handler
+# CallbackQuery handler
 async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = query.data
@@ -129,14 +124,12 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "back_main":
         await query.edit_message_text("Asosiy menyu:", reply_markup=main_menu())
 
-
+# Main function
 def main():
-    # Render’da background worker sifatida polling ishlatish
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(callbacks))
-    app.run_polling()
-
+    app.run_polling()  # Background worker uchun
 
 if __name__ == "__main__":
     main()
