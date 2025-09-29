@@ -5,8 +5,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 # Environment variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = int(os.environ.get("ADMIN_ID"))  # Admin Telegram ID
+ADMIN_ID = int(os.environ.get("ADMIN_ID"))  # Default admin ID
 
+# Logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -129,7 +130,7 @@ def main():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(callbacks))
-    app.run_polling()  # Background worker uchun
+    app.run_polling()  # Background worker sifatida
 
 if __name__ == "__main__":
     main()
