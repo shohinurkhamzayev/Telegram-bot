@@ -6,9 +6,9 @@ from telegram.ext import (
     ContextTypes
 )
 
-# Render env variables
+# Render environment variables
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_ID = os.environ.get("ADMIN_ID", "8170632684")
+ADMIN_ID = int(os.environ.get("ADMIN_ID", "8170632684"))  # Telegram admin ID
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -90,8 +90,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
              InlineKeyboardButton("1500 ⭐", callback_data="stars_1500")],
             [InlineKeyboardButton("2500 ⭐", callback_data="stars_2500"),
              InlineKeyboardButton("10000 ⭐", callback_data="stars_10000")],
-
-[InlineKeyboardButton("25000 ⭐", callback_data="stars_25000")],
+            [InlineKeyboardButton("25000 ⭐", callback_data="stars_25000")],
             [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")],
         ]
         await query.edit_message_text("Stars paketini tanlang:", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -122,7 +121,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "Agar bot ishlamay qolsa 👨‍💻 Admin bilan bog‘laning.",
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"https://t.me/{ADMIN_USERNAME}")],
+                [[InlineKeyboardButton("👨‍💻 Admin bilan aloqa", url=f"tg://user?id={ADMIN_ID}")],
                  [InlineKeyboardButton("⬅️ Orqaga", callback_data="back_main")]]
             ),
         )
@@ -132,7 +131,7 @@ async def callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
-    # Render uchun polling ishlatiladi (background worker sifatida)
+    # Render’da background worker sifatida polling ishlatish
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(callbacks))
